@@ -86,33 +86,23 @@ def update_location():
         cursor.close()
         conn.close()
 
-# 3️⃣ Get Nearby Buses (sorted by nearest first)
+# ---------- Get All Buses (lightweight, distances handled in Flutter) ----------
 @app.route("/get_nearby_buses", methods=["POST"])
 def get_nearby_buses():
-    data = request.json
-    try:
-        user_lat = float(data.get("latitude"))
-        user_lon = float(data.get("longitude"))
-    except (TypeError, ValueError):
-        return jsonify({"error": "Invalid latitude/longitude"}), 400
-
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        user_point = f"ST_SRID(POINT({user_lon}, {user_lat}), 4326)"
-
-        query = f"""
-        SELECT b.bus_id, b.bus_no, b.bus_name, b.popularity,
-               l.latitude, l.longitude, l.updated_at,
-               ST_Distance_Sphere(l.location, {user_point}) AS distance_meters
-        FROM latest_bus_location l
-        JOIN buses b ON b.bus_id = l.bus_id
-        ORDER BY distance_meters ASC
-        """
-        cursor.execute(query)
+        # Fetch all latest bus locations with basic info
+        cursor.execute("""
+            SELECT b.bus_id, b.bus_no, b.bus_name, b.popularity,
+                   l.latitude, l.longitude, l.updated_at
+            FROM latest_bus_location l
+            JOIN buses b ON b.bus_id = l.bus_id
+        """)
         rows = cursor.fetchall()
 
+        # Convert to JSON-friendly format
         result = [
             {
                 "bus_id": r["bus_id"],
@@ -120,7 +110,6 @@ def get_nearby_buses():
                 "bus_name": r["bus_name"],
                 "latitude": float(r["latitude"]),
                 "longitude": float(r["longitude"]),
-                "distance_m": round(float(r["distance_meters"]), 1),
                 "updated_at": r["updated_at"].isoformat() if r["updated_at"] else None,
                 "popularity": r.get("popularity", 0),
             }
