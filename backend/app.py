@@ -1,17 +1,20 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from math import radians, sin, cos, sqrt, atan2
 import mysql.connector
 from mysql.connector import Error
+import os
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 # ---------- MySQL Connection ----------
 def get_db_connection():
     return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="Dharan$$4656",
-        database="bus_tracking",
+        host=os.environ.get("DB_HOST", "mysql-1a479660-bustracking4656s.d.aivencloud.com"),
+        user=os.environ.get("DB_USER", "avnadmin"),
+        password=os.environ.get("DB_PASSWORD", "AVNS_UyGORLroOQKmfeoeQ5H"),
+        database=os.environ.get("DB_NAME", "bus_location_tracking"),
         autocommit=True
     )
 
@@ -99,7 +102,6 @@ def get_nearby_buses():
 
         user_point = f"ST_SRID(POINT({user_lon}, {user_lat}), 4326)"
 
-        # Fetch all buses without distance restriction
         query = f"""
         SELECT b.bus_id, b.bus_no, b.bus_name, b.popularity,
                l.latitude, l.longitude, l.updated_at,
@@ -154,4 +156,4 @@ def home():
 
 # ---------- Run ----------
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
