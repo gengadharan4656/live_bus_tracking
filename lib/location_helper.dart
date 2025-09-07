@@ -7,7 +7,7 @@ class LocationHelper {
   static final Distance _distance = Distance();
 
   /// 🔗 Your backend URL (update if needed)
-  static const String baseUrl = "http://192.168.151.171:5000";
+  static const String baseUrl = "https://location-bus-tracking.onrender.com";
 
   /// 📡 Fetch nearby buses from backend
   static Future<Map<String, LatLng>> fetchNearbyBuses({
