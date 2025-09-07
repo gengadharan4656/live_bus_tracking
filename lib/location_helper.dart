@@ -6,15 +6,16 @@ import 'package:http/http.dart' as http;
 class LocationHelper {
   static final Distance _distance = Distance();
 
-  /// 🔗 Your backend URL (update if needed)
+  /// 🔗 Your backend URL
   static const String baseUrl = "https://location-bus-tracking.onrender.com";
 
   /// 📡 Fetch nearby buses from backend
+  /// radiusMeters default set high to show all buses across Madurai
   static Future<Map<String, LatLng>> fetchNearbyBuses({
     required double userLat,
     required double userLon,
-    int limit = 10,
-    double radiusMeters = 2000, // default 2km radius
+    int limit = 50, // increase to show more buses
+    double radiusMeters = 100000, // 100 km radius to include all buses
   }) async {
     try {
       final response = await http.post(
@@ -61,13 +62,13 @@ class LocationHelper {
     }
   }
 
-  /// 🔄 Live stream for nearby buses
+  /// 🔄 Stream to update all nearby buses periodically
   static Stream<Map<String, LatLng>> getNearbyBusesStream({
     required double userLat,
     required double userLon,
     int interval = 5, // refresh every 5 sec
-    int limit = 10,
-    double radiusMeters = 2000,
+    int limit = 50,
+    double radiusMeters = 100000, // include all Madurai buses
   }) async* {
     while (true) {
       final buses = await fetchNearbyBuses(
@@ -81,13 +82,13 @@ class LocationHelper {
     }
   }
 
-  /// 🔄 Live stream for a single bus
+  /// 🔄 Stream for single bus location
   static Stream<LatLng?> getBusLocationStream({
     required String busNumber,
     required double userLat,
     required double userLon,
     int interval = 5,
-    double radiusMeters = 5000,
+    double radiusMeters = 100000,
   }) async* {
     while (true) {
       final buses = await fetchNearbyBuses(
@@ -96,7 +97,7 @@ class LocationHelper {
         limit: 50,
         radiusMeters: radiusMeters,
       );
-      yield buses[busNumber]; // ✅ null if not found
+      yield buses[busNumber]; // null if not found
       await Future.delayed(Duration(seconds: interval));
     }
   }
